@@ -176,8 +176,8 @@ namespace AnimizerTool {
         private void menuHelpAbout_Click(object sender, EventArgs e) {
             MessageBox.Show("AnimizerTool - A GUI tool for managing Animizer anims.\n\n" +
                 "Created by Fauxtrot. (https://www.github.com/GDFauxtrot)\n\n" +
-                "Build date: Dec 24, 2018\n\n\n" +
-                "(Don't expect much quality, this is an internal bodge job tool.)",
+                "Build date: Dec 28, 2018 (v1.0.1)\n\n\n" +
+                "(Don't expect superior quality, this is an internal bodge job tool.)",
                 "About", MessageBoxButtons.OK);
         }
 

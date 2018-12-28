@@ -46,8 +46,10 @@ namespace AnimizerTool {
             animPreviewPicture.Enabled = false;
             animPreviewPicture.Visible = false;
 
+            openAnimFile = "";
             selectedCellValue = "";
             cellEditPreviousName = "";
+            animCurrentFrame = 0;
             animFrameWhenPlaying = 0;
             currentScale = 1;
 

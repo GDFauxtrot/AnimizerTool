@@ -295,6 +295,8 @@ namespace AnimizerTool {
         }
 
         private void prevAnimBtn_Click(object sender, EventArgs e) {
+            bool changes = changesMade;
+
             if (animCurrentFrame > 0) {
                 LoadAnimFrameData(selectedCellValue, --animCurrentFrame);
                 if (animCurrentFrame == 0) {
@@ -303,9 +305,14 @@ namespace AnimizerTool {
             }
 
             nextAnimBtn.Enabled = true;
+
+            if (!changes)
+                SetChangesMade(false);
         }
 
         private void nextAnimBtn_Click(object sender, EventArgs e) {
+            bool changes = changesMade;
+
             Anim anim = anims[selectedCellValue];
             int frameCount = anim.frames.Count;
 
@@ -315,6 +322,9 @@ namespace AnimizerTool {
             removeAnimFrameBtn.Enabled = true;
 
             nextAnimBtn.Enabled = animCurrentFrame + 1 < anim.frames.Count;
+
+            if (!changes)
+                SetChangesMade(false);
         }
 
         private void addAnimFrameBtn_Click(object sender, EventArgs e) {
@@ -667,28 +677,44 @@ namespace AnimizerTool {
             g.DrawLine(hPen, hP1, hP2);
             g.DrawLine(vPen, vP1, vP2);
 
-            // Box Size
             if (selectedCellValue != "") {
-                Pen boxPen = new Pen(boxColor);
+                // Get box rect first
+                Rectangle boxRect = new Rectangle();
 
                 int rX = (int) (anims[selectedCellValue].frames[animCurrentFrame].sizeX * currentScale);
                 int rY = (int) (anims[selectedCellValue].frames[animCurrentFrame].sizeY * currentScale);
 
-                g.Clip = new Region(imageRect);
+                boxRect.Width = rX;
+                boxRect.Height = rY;
+
                 if (imageOrigin == ImageOrigin.Center) {
-                    g.DrawRectangle(boxPen, new Rectangle(
-                        imageRect.X + imageRect.Width/2 - rX/2,
-                        imageRect.Y + imageRect.Height/2 - rY/2,
-                        rX, rY));
+                    boxRect.X = imageRect.X + imageRect.Width/2 - rX/2;
+                    boxRect.Y = imageRect.Y + imageRect.Height/2 - rY/2;
                 } else if (imageOrigin == ImageOrigin.TopLeft) {
-                    g.DrawRectangle(boxPen, new Rectangle(
-                        imageRect.X, imageRect.Y,
-                        rX, rY));
+                    boxRect.X = imageRect.X;
+                    boxRect.Y = imageRect.Y;
                 } else {
-                    g.DrawRectangle(boxPen, new Rectangle(
-                        imageRect.X, imageRect.Y + imageRect.Width - rY,
-                        rX, rY));
+                    boxRect.X = imageRect.X;
+                    boxRect.Y = imageRect.Y + imageRect.Width - rY;
                 }
+
+                // Anim playing? Dim fill
+                if (animPreviewIsPlaying) {
+                    GraphicsPath dimOuter = new GraphicsPath();
+                    GraphicsPath dimInner = new GraphicsPath();
+                    dimOuter.AddRectangle(imageRect);
+                    dimInner.AddRectangle(boxRect);
+
+                    Region r = new Region(dimOuter);
+                    r.Exclude(dimInner);
+                    g.FillRegion(new SolidBrush(Color.FromArgb(128, Color.Black)), r);
+                }
+
+                // Size box
+                Pen boxPen = new Pen(boxColor);
+
+                g.Clip = new Region(imageRect);
+                g.DrawRectangle(boxPen, boxRect);
                 g.ResetClip();
             }
         }
@@ -995,5 +1021,21 @@ namespace AnimizerTool {
             return base.ProcessCmdKey(ref msg, keyData);
         }
 
+        protected override void OnClosed(EventArgs e) {
+            if (changesMade) {
+                DialogResult result = ShowUnsavedChangesMsg();
+
+                if (result == DialogResult.Cancel) {
+                    return;
+                }
+                if (result == DialogResult.Yes) {
+                    if (openAnimFile == "")
+                        ProcessSaveAnimFileDialog();
+                    else
+                        SaveAnimFile(openAnimFile);
+                }
+            }
+            base.OnClosed(e);
+        }
     }
 }
